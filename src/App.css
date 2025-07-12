@@ -1,38 +1,88 @@
-.App {
+body {
+  background-color: #ccc;
+}
+
+.gameboy-body {
+  width: 360px;
+  margin: 30px auto;
+  background-color: #f1f1f1;
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3);
   text-align: center;
+  font-family: 'Courier New', monospace;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.gameboy-screen canvas {
+  width: 100%;
+  border: 4px solid #555;
+  background: #a8d5a2;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.gameboy-buttons {
+  margin-top: 20px;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
+.dpad {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  margin: 0 43px;
+}
+
+.dpad .btn {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  background: #444;
   color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: bold;
 }
 
-.App-link {
-  color: #61dafb;
+.dpad .up    { top: 0; left: 35px; }
+.dpad .down  { bottom: 0; left: 35px; }
+.dpad .left  { left: 0; top: 35px; }
+.dpad .right { right: 0; top: 35px; }
+
+.ab-buttons {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+  gap: 40px;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.ab-buttons .btn {
+  width: 50px;
+  height: 50px;
+  background: #b32059;
+  border-radius: 50%;
+  border: none;
+  color: white;
+  font-weight: bold;
+  font-size: 18px;
+  box-shadow: 0 4px #822;
+}
+
+.ab-buttons .btn:active {
+  transform: translateY(4px);
+  box-shadow: none;
+}
+
+.start-select {
+  display: flex;
+  justify-content: center;
+  margin-top: 15px;
+  gap: 20px;
+}
+
+.start-select .btn {
+  background: #999;
+  border-radius: 10px;
+  padding: 5px 15px;
+  font-weight: bold;
+  border: none;
+  font-size: 14px;
 }
