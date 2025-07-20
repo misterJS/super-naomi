@@ -9,6 +9,7 @@ import topBrickImg from "./assets/top-brick.png";
 import coinImg from "./assets/coin.png";
 import coinSoundUrl from "./assets/coin.mp3";
 import bgmUrl from "./assets/super-naomi-bgm.mp3";
+import bgmPianoUrl from "./assets/super-piano.mp3";
 import jumpUrl from "./assets/jump.mp3";
 import imageNaomi6 from "./assets/super-naomi-6.png";
 import cloudImg from "./assets/cloud.png";
@@ -23,9 +24,14 @@ const GameCanvas = () => {
   const gameStarted = useRef(false);
   const gameEnded = useRef(false);
   const naomiY = useRef(220);
+  const jumpCount = useRef(0);
+  const showBalloons = useRef(false);
+  const balloons = useRef([]);
+  const idleTimer = useRef(0);
+  const showCredits = useRef(false);
+  const creditY = useRef(500);
   let naomiDirection = 1;
 
-  // === Kondisi Siang atau Malam ===
   const hour = new Date().getHours();
   const isNight = hour < 6 || hour >= 18;
 
@@ -36,6 +42,91 @@ const GameCanvas = () => {
   const canvasWidth = 800;
   const canvasHeight = 400;
   const grassTopY = 368;
+
+  const creditLines = [
+    "🎬 CREDITS - SUPER NAOMI 🎬",
+    "",
+    "Created and Directed by",
+    "Aulia Rachmat Yusdion",
+    "",
+    "",
+    "",
+    "Executive Producer",
+    "Naomi Putri Yusdion",
+    "",
+    "",
+    "",
+    "Game Designer",
+    "Ayahnya Naomi",
+    "",
+    "",
+    "",
+    "Lead Developer",
+    "Ayahnya Naomi",
+    "",
+    "",
+    "",
+    "Story and Concept",
+    "Ayah & Mama",
+    "",
+    "",
+    "",
+    "Artwork & Animation",
+    "Mama Cahyaning Design & Naomi's Imagination",
+    "",
+    "",
+    "",
+    "",
+    "Original Soundtrack",
+    "“Super Naomi Theme” by Dion’s Music Room",
+    "",
+    "",
+    "",
+    "",
+    "Voice Inspiration",
+    "Naomi saat bangun tidur dan lagi ngemil",
+    "",
+    "",
+    "",
+    "QA Tester",
+    "Mama – selalu sabar ngetes bug sambil masak",
+    "",
+    "",
+    "",
+    "Special Thanks",
+    "- Semua yang percaya Naomi bisa jadi pahlawan",
+    "- Para pemain yang tersenyum saat main",
+    "",
+    "",
+    "",
+    "Powered by",
+    "React.js, HTML5 Canvas, and Endless Love",
+    "",
+    "",
+    "",
+    "Naomi, engkau adalah bintang kecil di langit luas kami.",
+    "Setiap tawa dan langkahmu memberi harapan bagi dunia ini.",
+    "Semoga keberanian dan kebaikan hatimu terus bersinar.",
+    "Terima kasih telah hadir dan membuat dunia jadi lebih indah.",
+    "Jadilah dirimu sendiri, selalu, sepenuhnya, dengan bangga.",
+    "Dari kami yang selalu mencintaimu, dengan sepenuh hati.",
+    "Happy Birthday Naomi.",
+    " - Ayah, Mama, dan Semesta.",
+    "",
+    "",
+    "",
+    "Filosofi koin 6 dan hidden gems (6) adalah bentuk rasa syukur kami untuk naomi",
+    "di umurnya yang 6 tahun ini.",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "Dedicated to",
+    "Naomi, sang bintang kecil yang selalu bersinar",
+  ];
 
   const marioRef = useRef({
     x: canvasWidth / 2 - 25,
@@ -55,60 +146,12 @@ const GameCanvas = () => {
   ]);
 
   const topBricksRef = useRef([
-    {
-      x: 500,
-      y: 300,
-      width: 80,
-      height: 30,
-      hit: false,
-      animY: 0,
-      animating: false,
-    },
-    {
-      x: 590,
-      y: 220,
-      width: 80,
-      height: 30,
-      hit: false,
-      animY: 0,
-      animating: false,
-    },
-    {
-      x: 680,
-      y: 170,
-      width: 80,
-      height: 30,
-      hit: false,
-      animY: 0,
-      animating: false,
-    },
-    {
-      x: 770,
-      y: 220,
-      width: 80,
-      height: 30,
-      hit: false,
-      animY: 0,
-      animating: false,
-    },
-    {
-      x: 860,
-      y: 300,
-      width: 80,
-      height: 30,
-      hit: false,
-      animY: 0,
-      animating: false,
-    },
-    {
-      x: 950,
-      y: 300,
-      width: 80,
-      height: 30,
-      hit: false,
-      animY: 0,
-      animating: false,
-    },
+    { x: 500, y: 300, width: 80, height: 30, animY: 0, animating: false },
+    { x: 590, y: 220, width: 80, height: 30, animY: 0, animating: false },
+    { x: 680, y: 170, width: 80, height: 30, animY: 0, animating: false },
+    { x: 770, y: 220, width: 80, height: 30, animY: 0, animating: false },
+    { x: 860, y: 300, width: 80, height: 30, animY: 0, animating: false },
+    { x: 950, y: 300, width: 80, height: 30, animY: 0, animating: false },
   ]);
 
   const cloudsFront = useRef([
@@ -149,6 +192,7 @@ const GameCanvas = () => {
 
     const coinSound = new Audio(coinSoundUrl);
     const bgm = new Audio(bgmUrl);
+    const bgmPiano = new Audio(bgmPianoUrl);
     const jumpSound = new Audio(jumpUrl);
 
     bgm.loop = true;
@@ -161,11 +205,9 @@ const GameCanvas = () => {
       const offset = offsetX.current;
       frameCount.current++;
 
-      // === Background berdasarkan waktu ===
       ctx.fillStyle = isNight ? "#0b1f3a" : "#4e9fe5";
       ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-      // Awan hanya muncul saat siang
       if (!isNight) {
         cloudsBack.current.forEach((cloud) => {
           cloud.x -= cloud.speed;
@@ -173,7 +215,6 @@ const GameCanvas = () => {
           ctx.globalAlpha = 0.3;
           ctx.drawImage(cloudSprite, cloud.x, cloud.y, 120, 60);
         });
-
         cloudsFront.current.forEach((cloud) => {
           cloud.x -= cloud.speed;
           if (cloud.x < -150) cloud.x = canvasWidth + Math.random() * 200;
@@ -185,13 +226,7 @@ const GameCanvas = () => {
 
       if (!gameStarted.current) {
         ctx.drawImage(naomi6Sprite, 200, -50, 400, 300);
-        ctx.drawImage(
-          wavingSprite,
-          350,
-          300,
-          100,
-          100
-        );
+        ctx.drawImage(wavingSprite, 350, 300, 100, 100);
         ctx.fillStyle = "#fff";
         ctx.font = "18px Arial";
         ctx.fillText("Pencet apa aja buat mulai!", 290, 190);
@@ -200,17 +235,54 @@ const GameCanvas = () => {
       }
 
       if (gameEnded.current) {
+        bgm.pause();
+        bgmPiano.play().catch(() => {});
+        bgmPiano.volume = 0.5;
+
         naomiY.current += naomiDirection;
         if (naomiY.current <= 200 || naomiY.current >= 240)
           naomiDirection *= -1;
 
         ctx.drawImage(naomi6Sprite, 200, -50, 400, 300);
         ctx.drawImage(wavingSprite, 350, naomiY.current, 100, 100);
+
         ctx.fillStyle = "#fff";
         ctx.font = "24px Arial";
-        ctx.fillText("Yeay! Semua koin terkumpul!", 250, 180);
+        ctx.textAlign = "left";
+        ctx.fillText("Yeay! Semua (6) koin terkumpul!", 210, 180);
         ctx.font = "18px Arial";
         ctx.fillText("Tekan R untuk restart", 300, 210);
+
+        idleTimer.current++;
+        if (idleTimer.current > 360) {
+          showCredits.current = true;
+        }
+
+        if (showCredits.current) {
+          ctx.fillStyle = "rgba(0, 0, 0, 1)";
+          ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+          ctx.fillStyle = "#fff";
+          ctx.font = "18px Arial";
+          ctx.textAlign = "center";
+
+          const centerX = canvasWidth / 2;
+
+          creditLines.forEach((line, i) => {
+            const y = creditY.current + i * 30;
+            if (y > -30 && y < canvasHeight + 30) {
+              ctx.fillText(line, centerX, y);
+            }
+          });
+
+          creditY.current -= 0.5;
+
+          const lastLineY = creditY.current + creditLines.length * 30;
+          if (lastLineY < 0) {
+            return;
+          }
+        }
+
         requestAnimationFrame(loop);
         return;
       }
@@ -237,7 +309,6 @@ const GameCanvas = () => {
         } else if (brick.animY < 0) {
           brick.animY += 2;
         }
-
         const brickY = brick.y + brick.animY;
         ctx.drawImage(
           topBrickSprite,
@@ -251,7 +322,6 @@ const GameCanvas = () => {
         const horizontalOverlap =
           marioGlobalX + mario.width > brick.x &&
           marioGlobalX < brick.x + brick.width;
-
         const verticalFromAbove =
           mario.y + mario.height > brickY &&
           mario.y < brickY &&
@@ -266,55 +336,75 @@ const GameCanvas = () => {
         }
       });
 
-      if (!standingOnBrick && mario.y + mario.height < grassTopY) {
+      if (!standingOnBrick && mario.y + mario.height < grassTopY)
         jumping = true;
-      }
-
       if (mario.y + mario.height >= grassTopY) {
         mario.y = grassTopY - mario.height;
         velocityY = 0;
         jumping = false;
       }
 
-      for (let i = 0; i < coinsRef.current.length; i++) {
-        const coin = coinsRef.current[i];
+      coinsRef.current.forEach((coin) => {
         if (!coin.collected) {
           const screenX = coin.x - offset;
           ctx.drawImage(coinSprite, screenX, coin.y, coin.width, coin.height);
-
           const marioGlobalX = mario.x + offset;
           const isColliding =
             marioGlobalX < coin.x + coin.width &&
             marioGlobalX + mario.width > coin.x &&
             mario.y < coin.y + coin.height &&
             mario.y + mario.height > coin.y;
-
           if (isColliding) {
             coin.collected = true;
-            scoreRef.current += 1;
+            scoreRef.current++;
             coinSound.currentTime = 0;
             coinSound.play();
-
             if (scoreRef.current === coinsRef.current.length) {
               gameEnded.current = true;
             }
-            break;
           }
         }
-      }
+      });
 
-      let sprite = standSprite;
-      if (keys.current["ArrowRight"] || keys.current["ArrowLeft"]) {
-        sprite =
-          Math.floor(frameCount.current / 10) % 2 === 0
+      const sprite =
+        keys.current["ArrowRight"] || keys.current["ArrowLeft"]
+          ? frameCount.current % 20 < 10
             ? walkSprite1
-            : walkSprite2;
-      }
-      ctx.drawImage(sprite, mario.x, mario.y + 33, mario.width, mario.height);
+            : walkSprite2
+          : standSprite;
 
+      ctx.drawImage(sprite, mario.x, mario.y + 33, mario.width, mario.height);
       ctx.fillStyle = "#fff";
       ctx.font = "20px Arial";
       ctx.fillText(`Score: ${scoreRef.current}`, 10, 30);
+
+      if (showBalloons.current) {
+        if (Math.random() < 0.05) {
+          balloons.current.push({
+            x: Math.random() * canvasWidth,
+            y: canvasHeight + 50,
+            speed: 1 + Math.random() * 1.5,
+            color: `hsl(${Math.random() * 360}, 70%, 60%)`,
+          });
+        }
+        balloons.current.forEach((b) => {
+          b.y -= b.speed;
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, 10, 0, Math.PI * 2);
+          ctx.fillStyle = b.color;
+          ctx.fill();
+          ctx.moveTo(b.x, b.y + 10);
+          ctx.lineTo(b.x, b.y + 20);
+          ctx.strokeStyle = "#333";
+          ctx.stroke();
+        });
+        balloons.current = balloons.current.filter((b) => b.y > -20);
+        ctx.fillStyle = "#fff";
+        ctx.font = "bold 18px Arial";
+        ctx.fillText("Selamat ulang tahun Naomi!", 250, 80);
+        ctx.font = "16px Arial";
+        ctx.fillText("Terima kasih sudah hadir di dunia ini.", 240, 105);
+      }
 
       requestAnimationFrame(loop);
     };
@@ -325,9 +415,13 @@ const GameCanvas = () => {
         offsetX.current = 0;
         gameEnded.current = false;
         coinsRef.current.forEach((coin) => (coin.collected = false));
+        idleTimer.current = 0;
+        creditY.current = canvasHeight + 100;
+        showCredits.current = false;
+        showBalloons.current = false;
+        jumpCount.current = 0;
         return;
       }
-
       if (!gameStarted.current) {
         gameStarted.current = true;
         bgm.play().catch(() => {});
@@ -338,6 +432,10 @@ const GameCanvas = () => {
         jumping = true;
         jumpSound.currentTime = 0;
         jumpSound.play();
+        jumpCount.current++;
+        if (jumpCount.current === 6) {
+          showBalloons.current = true;
+        }
       }
     };
 
@@ -359,13 +457,13 @@ const GameCanvas = () => {
 
   return (
     <>
-    <canvas
-      ref={canvasRef}
-      width="800"
-      height="400"
-      style={{ border: "2px solid black", backgroundColor: "#4e9fe5" }}
-    />
-    {isNight && <Stars count={80} />}
+      <canvas
+        ref={canvasRef}
+        width="800"
+        height="400"
+        style={{ border: "2px solid black", backgroundColor: "#4e9fe5" }}
+      />
+      {isNight && <Stars count={80} />}
     </>
   );
 };
