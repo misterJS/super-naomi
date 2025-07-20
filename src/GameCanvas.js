@@ -251,7 +251,7 @@ const GameCanvas = () => {
         ctx.textAlign = "left";
         ctx.fillText("Yeay! Semua (6) koin terkumpul!", 210, 180);
         ctx.font = "18px Arial";
-        ctx.fillText("Tekan R untuk restart", 300, 210);
+        ctx.fillText("Tunggu sebentar...", 300, 210);
 
         idleTimer.current++;
         if (idleTimer.current > 360) {
